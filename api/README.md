@@ -16,7 +16,7 @@
    docker compose -f docker-compose.middleware.yaml --profile weaviate -p dify up -d
    cd ../api
    ```
-
+ 
 2. Copy `.env.example` to `.env`
 3. Generate a `SECRET_KEY` in the `.env` file.
 
