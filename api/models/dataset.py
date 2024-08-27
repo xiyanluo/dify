@@ -1,4 +1,5 @@
 import base64
+import enum
 import hashlib
 import hmac
 import json
@@ -16,10 +17,16 @@ from configs import dify_config
 from core.rag.retrieval.retrival_methods import RetrievalMethod
 from extensions.ext_database import db
 from extensions.ext_storage import storage
-from models import StringUUID
-from models.account import Account
-from models.model import App, Tag, TagBinding, UploadFile
 
+from .account import Account
+from .model import App, Tag, TagBinding, UploadFile
+from .types import StringUUID
+
+
+class DatasetPermissionEnum(str, enum.Enum):
+    ONLY_ME = 'only_me'
+    ALL_TEAM = 'all_team_members'
+    PARTIAL_TEAM = 'partial_members'
 
 class Dataset(db.Model):
     __tablename__ = 'datasets'
@@ -635,7 +642,7 @@ class Embedding(db.Model):
     )
 
     id = db.Column(StringUUID, primary_key=True, server_default=db.text('uuid_generate_v4()'))
-    model_name = db.Column(db.String(40), nullable=False,
+    model_name = db.Column(db.String(255), nullable=False,
                            server_default=db.text("'text-embedding-ada-002'::character varying"))
     hash = db.Column(db.String(64), nullable=False)
     embedding = db.Column(db.LargeBinary, nullable=False)
@@ -660,7 +667,7 @@ class DatasetCollectionBinding(db.Model):
 
     id = db.Column(StringUUID, primary_key=True, server_default=db.text('uuid_generate_v4()'))
     provider_name = db.Column(db.String(40), nullable=False)
-    model_name = db.Column(db.String(40), nullable=False)
+    model_name = db.Column(db.String(255), nullable=False)
     type = db.Column(db.String(40), server_default=db.text("'dataset'::character varying"), nullable=False)
     collection_name = db.Column(db.String(64), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.text('CURRENT_TIMESTAMP(0)'))

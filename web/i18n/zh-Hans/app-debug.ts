@@ -287,11 +287,11 @@ const translation = {
     typeSelect: '下拉选项',
   },
   varKeyError: {
-    canNoBeEmpty: '变量不能为空',
-    tooLong: '变量: {{key}} 长度太长。不能超过 30 个字符',
-    notValid: '变量: {{key}} 非法。只能包含英文字符，数字和下划线',
-    notStartWithNumber: '变量: {{key}} 不能以数字开头',
-    keyAlreadyExists: '变量:{{key}} 已存在',
+    canNoBeEmpty: '{{key}}必填',
+    tooLong: '{{key}} 长度太长。不能超过 30 个字符',
+    notValid: '{{key}} 非法。只能包含英文字符，数字和下划线',
+    notStartWithNumber: '{{key}} 不能以数字开头',
+    keyAlreadyExists: '{{key}} 已存在',
   },
   otherError: {
     promptNoBeEmpty: '提示词不能为空',
@@ -320,7 +320,6 @@ const translation = {
     'required': '必填',
     'content': '内容',
     'errorMsg': {
-      varNameRequired: '变量名称必填',
       labelNameRequired: '显示名称必填',
       varNameCanBeRepeat: '变量名称不能重复',
       atLeastOneOption: '至少需要一个选项',
@@ -404,7 +403,7 @@ const translation = {
     },
     retrieveMultiWay: {
       title: '多路召回',
-      description: '根据用户意图同时匹配所有知识库，从多路知识库查询相关文本片段，经过重排序步骤，从多路查询结果中选择匹配用户问题的最佳结果，需配置 Rerank 模型 API。',
+      description: '根据用户意图同时匹配所有知识库，从多路知识库查询相关文本片段，经过重排序步骤，从多路查询结果中选择匹配用户问题的最佳结果。',
     },
     rerankModelRequired: '请选择 Rerank 模型',
     params: '参数设置',
