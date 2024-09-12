@@ -13,8 +13,9 @@ from services.workflow_service import WorkflowService
 
 logger = logging.getLogger(__name__)
 
-current_dsl_version = "0.1.1"
+current_dsl_version = "0.1.2"
 dsl_to_dify_version_mapping: dict[str, str] = {
+    "0.1.2": "0.8.0",
     "0.1.1": "0.6.0",  # dsl version -> from dify version
 }
 
@@ -80,13 +81,11 @@ class AppDslService:
             raise ValueError("Missing app in data argument")
 
         # get app basic info
-        name = args.get("name") if args.get("name") else app_data.get("name")
-        description = args.get("description") if args.get("description") else app_data.get("description", "")
-        icon_type = args.get("icon_type") if args.get("icon_type") else app_data.get("icon_type")
-        icon = args.get("icon") if args.get("icon") else app_data.get("icon")
-        icon_background = (
-            args.get("icon_background") if args.get("icon_background") else app_data.get("icon_background")
-        )
+        name = args.get("name") or app_data.get("name")
+        description = args.get("description") or app_data.get("description", "")
+        icon_type = args.get("icon_type") or app_data.get("icon_type")
+        icon = args.get("icon") or app_data.get("icon")
+        icon_background = args.get("icon_background") or app_data.get("icon_background")
         use_icon_as_answer_icon = app_data.get("use_icon_as_answer_icon", False)
 
         # import dsl and create app
