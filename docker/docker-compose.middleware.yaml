@@ -87,7 +87,7 @@ services:
 
   # The Weaviate vector store.
   weaviate:
-    image: semitechnologies/weaviate:1.19.0
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/semitechnologies/weaviate:1.19.0
     profiles:
       - weaviate
     restart: always
