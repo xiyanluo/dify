@@ -84,6 +84,16 @@ services:
     networks:
       - ssrf_proxy_network
       - default
+      -
+  qdrant:
+    image: langgenius/qdrant:v1.7.3
+    profiles:
+      - qdrant
+    restart: always
+    volumes:
+      - ./volumes/qdrant:/qdrant/storage
+    environment:
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-difyai123456}
 
   # The Weaviate vector store.
   weaviate:
