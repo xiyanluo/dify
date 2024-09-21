@@ -162,9 +162,9 @@ class FileService:
 
     @staticmethod
     def get_image_preview(file_id: str, timestamp: str, nonce: str, sign: str) -> tuple[Generator, str]:
-        result = UploadFileParser.verify_image_file_signature(file_id, timestamp, nonce, sign)
-        if not result:
-            raise NotFound("File not found or signature is invalid")
+        # result = UploadFileParser.verify_image_file_signature(file_id, timestamp, nonce, sign)
+        # if not result:
+        #     raise NotFound("File not found or signature is invalid")
 
         upload_file = db.session.query(UploadFile).filter(UploadFile.id == file_id).first()
 
