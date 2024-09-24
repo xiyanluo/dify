@@ -40,15 +40,10 @@ stop(){
 }
 
 start(){
-  is_exist -e
-  if [ $? -eq "0" ]; then
-    echo "${APP_NAME} is already running. pid=${pid} ."
-  else
-    poetry shell
-    nohup $APP_NAME run --host 0.0.0.0 --port 5001 --debug > $LONG_NAME 2>&1 &
-    echo ">>> start $APP_NAME successed PID=$! <<<"
+  poetry shell
+  nohup $APP_NAME run --host 0.0.0.0 --port 5001 --debug > $LONG_NAME 2>&1 &
+  echo ">>> start $APP_NAME successed PID=$! <<<"
 	tail -fn 200 $LONG_NAME
-  fi
 }
 
 log(){
