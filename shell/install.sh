@@ -8,6 +8,8 @@ PYENV_URL="https://github.com/pyenv/pyenv.git"
 PYTHON_VERSION="3.10.14"
 PYTHON_ARCHIVE="Python-$PYTHON_VERSION.tar.xz"
 PYTHON_URL="http://wp.dayousoft.com/py/Python-3.10.14.tar.xz"
+# node环境信息
+NODE_URL="https://rpm.nodesource.com/setup_18.x"
 
 install_git(){
   echo ">>>>>>>>> 1:正在配置Git环境 <<<<<<<<<<<"
@@ -86,9 +88,45 @@ install_Python(){
   python3 -m pip install grpcio==1.58.0 frozendict kaleido unstructured
 }
 
+install_Poetry(){
+  echo ">>>>>>>>> 3:正在配置Poetry环境 <<<<<<<<<<<"
+  # 检查 poetry 是否已安装
+  if ! command -v poetry &> /dev/null
+  then
+      echo "[poetry]现在将通过 pip 安装..."
+      pip install poetry
+  else
+      echo "[poetry]已安装"
+  fi
+  poetry --version
+}
+
+install_Node(){
+  if command -v node > /dev/null 2>&1 && command -v npm > /dev/null 2>&1; then
+      echo "- Node和npm已经安装。"
+      echo "- Node版本: $(node -v)"
+      echo "- NPM版本: $(npm -v)"
+  else
+      echo "Node未安装，现在开始安装..."
+      # 导入NodeSource Node.js 18.x repo
+      curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+      # 安装Node.js
+      if sudo dnf install -y nodejs; then
+          printSuccess "- [Node]安装成功."
+          echo "Node版本: $(node -v)"
+          echo "NPM版本: $(npm -v)"
+      else
+          printFail "Node安装失败。"
+          exit 1
+      fi
+  fi
+}
 getStatus(){
   pyenv --version
   python3 --version
+  poetry --version
+  node -v
+  npm -v
 }
 printSuccess() {
     echo -e "\033[0;32m$1\033[0m"
@@ -100,6 +138,8 @@ restart(){
   install_git
   install_pyenv
   install_Python
+  install_Poetry
+  install_Node
 }
 case "$1" in
   "status") #查看状态
