@@ -166,7 +166,7 @@ case "$1" in
     startDocker
     ;;
   *)
-    restart
+    restar./r
     ;;
 esac
 exit 0
