@@ -109,7 +109,7 @@ install_Node(){
   else
       echo "Node未安装，现在开始安装..."
       # 导入NodeSource Node.js 18.x repo
-      curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+      curl -fsSL $NODE_URL | sudo bash -
       # 安装Node.js
       if sudo dnf install -y nodejs; then
           printSuccess "- [Node]安装成功."
