@@ -144,25 +144,25 @@ case "$1" in
   "stop2")
     stop_celery
     ;;
-  "log2")
+  "log2") #打印celery worker日志
     log_celery
     ;;
-  "worker")
+  "worker") #启动worker
     restart_celery
     ;;
   "git") #git pull
     updateGit
     ;;
-  "lib") #更新工程依赖包
+  "lib") #更新py依赖包
     updateLib
     ;;
-  "web")
+  "web") #编译web包
     installWeb
     ;;
-  "status")
+  "status") #查看状态
     getStatus
     ;;
-  "docker")
+  "docker") #启动docker服务
     startDocker
     ;;
   *)
