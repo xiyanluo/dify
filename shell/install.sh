@@ -3,7 +3,7 @@ GIT_USER_NAME="小HUI灰"
 GIT_USER_EMAIL="21794468@qq.com"
 DIFY_URL="https://github.com/xiyanluo/dify.git"
 # Pyenv环境信息
-Pyenv_URL="https://github.com/pyenv/pyenv.git"
+PYENV_URL="https://github.com/pyenv/pyenv.git"
 # Python环境信息
 PYTHON_VERSION="3.10.14"
 PYTHON_ARCHIVE="Python-$PYTHON_VERSION.tar.xz"
@@ -46,7 +46,7 @@ install_pyenv(){
   echo ">>>>>>>>> 2:正在配置Pyenv环境 <<<<<<<<<<<"
   if [ ! -d "$HOME/.pyenv" ]; then
       echo "- Installing pyenv..."
-      git clone $Pyenv_URL ~/.pyenv
+      git clone $PYENV_URL ~/.pyenv
       if [ $? -eq 0 ]; then
           printSuccess "- [Pyenv]拉取成功"
           cd ~/.pyenv && src/configure && make -C src
@@ -97,3 +97,17 @@ printSuccess() {
 printFail() {
     echo -e "\033[31m$1\033[0m"
 }
+restart(){
+  install_git
+  install_pyenv
+  install_Python
+}
+case "$1" in
+  "status") #查看状态
+    getStatus
+    ;;
+  *)
+    restart
+    ;;
+esac
+exit 0
