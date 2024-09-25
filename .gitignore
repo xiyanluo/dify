@@ -188,3 +188,4 @@ api/.vscode
 
 .idea/
 .vscode
+/api/run.sh
