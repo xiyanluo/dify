@@ -116,6 +116,13 @@ startDocker(){
   docker-compose -f docker-compose.middleware.yaml up -d
 }
 
+updateDb(){
+  cd api && poetry run flask db upgrade
+}
+updateVdb(){
+  cd api && poetry run flask vdb-migrate
+}
+
 getStatus(){
   echo "----------正在查询[Flask]进程-----------"
   if [ -n "$flask_processes" ]; then
@@ -167,6 +174,12 @@ case "$1" in
     ;;
   "docker") #启动docker服务
     startDocker
+    ;;
+   "db") #pgsql数据库迁移
+    updateDb
+    ;;
+   "vdb") #向量数据库更新
+    updateVdb
     ;;
   *)
     restart_flask
