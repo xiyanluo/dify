@@ -12,11 +12,11 @@ usage(){
 is_exist(){
   # 通过awk获取每个flask进程的PID
   if [ -z "$flask_processes" ]; then
-   echo "没有找到正在运行的flask进程。"
+   echo "[${APP_NAME}]没有找到进程。"
    return 1
   else
    # 输出找到的flask进程
-   echo "找到以下flask进程："
+   echo "[${APP_NAME}]找到以下进程："
    echo "$flask_processes"
    # 通过awk获取每个flask进程的PID
    pids=$(echo "$flask_processes" | awk '{print $2}')
@@ -28,12 +28,12 @@ stop(){
   is_exist
   if [ $? -eq "0" ]; then
     for pid in $pids; do
-      echo "正在杀掉进程 $pid ..."
+      echo "[${APP_NAME}]正在杀掉进程 $pid ..."
       kill -9 $pid
       if [ $? -eq 0 ]; then
-          echo "进程 $pid 已被成功杀掉。"
+          echo "[${APP_NAME}]进程 $pid 已被成功杀掉。"
       else
-          echo "无法杀掉进程 $pid。"
+          echo "[${APP_NAME}]无法杀掉进程 $pid。"
       fi
     done
   fi
@@ -42,7 +42,7 @@ stop(){
 start(){
   poetry shell
   nohup $APP_NAME run --host 0.0.0.0 --port 5001 --debug > $LONG_NAME 2>&1 &
-  echo ">>> start $APP_NAME successed PID=$! <<<"
+  echo ">>> 启动 $APP_NAME 成功 PID=$! <<<"
 	tail -fn 200 $LONG_NAME
 }
 
@@ -51,7 +51,7 @@ log(){
   if [ $? -eq "0" ]; then
     tail -fn 200 $LONG_NAME
   else
-    echo "${APP_NAME} is not find"
+    echo "${APP_NAME} 未找到"
   fi  
 }
 restart(){
