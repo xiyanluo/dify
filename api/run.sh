@@ -43,16 +43,11 @@ start(){
   poetry shell
   nohup $APP_NAME run --host 0.0.0.0 --port 5001 --debug > $LONG_NAME 2>&1 &
   echo ">>> 启动 $APP_NAME 成功 PID=$! <<<"
-	tail -fn 200 $LONG_NAME
+	log
 }
 
 log(){
-  is_exist
-  if [ $? -eq "0" ]; then
-    tail -fn 200 $LONG_NAME
-  else
-    echo "${APP_NAME} 未找到"
-  fi  
+  tail -fn 200 $LONG_NAME
 }
 restart(){
   stop
