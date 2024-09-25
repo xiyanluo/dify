@@ -2,6 +2,9 @@
 GIT_USER_NAME="小HUI灰"
 GIT_USER_EMAIL="21794468@qq.com"
 DIFY_URL="https://github.com/xiyanluo/dify.git"
+# Pyenv与Python环境信息
+Python_Version=3.10.14
+Python_URL=http://wp.dayousoft.com/py/Python-3.10.14.tar.xz
 
 install_git(){
   echo ">>>>>>>>> 1:正在配置Git环境 <<<<<<<<<<<"
