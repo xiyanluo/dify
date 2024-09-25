@@ -117,20 +117,23 @@ startDocker(){
 }
 
 getStatus(){
-  echo "----------正在查询 Flask-----------"
+  echo "----------正在查询[Flask]进程-----------"
   if [ -n "$flask_processes" ]; then
     echo "找到以下进程:"
     echo "$flask_processes"
   else
     echo -e "\033[31mNot found\033[0m"
   fi
-  echo "----------正在查询 Celery-----------"
+  echo "----------正在查询[Celery]进程-----------"
   if [ -n "$celery_processes" ]; then
     echo "找到以下进程:"
     echo "$celery_processes"
   else
     echo -e "\033[31mNot found\033[0m"
   fi
+  echo "----------正在查询Docker服务-----------"
+  echo "找到以下Docker服务:"
+  cd docker && docker-compose ps
 }
 
 
