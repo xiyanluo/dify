@@ -40,8 +40,9 @@ stop(){
 }
 
 start(){
-  poetry shell
-  nohup $APP_NAME run --host 0.0.0.0 --port 5001 --debug > $LONG_NAME 2>&1 &
+#  poetry shell
+#  nohup $APP_NAME run --host 0.0.0.0 --port 5001 --debug > $LONG_NAME 2>&1 &
+  nohup poetry run $APP_NAME run --host 0.0.0.0 --port 5001 --debug > $LONG_NAME 2>&1 &
   echo ">>> 启动 $APP_NAME 成功 PID=$! <<<"
 	log
 }
