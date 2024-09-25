@@ -28,7 +28,7 @@ stop(){
   is_exist
   if [ $? -eq "0" ]; then
     for pid in $pids; do
-      echo "[${APP_NAME}]正在杀掉进程 $pid ..."
+#      echo "[${APP_NAME}]正在杀掉进程 $pid ..."
       kill -9 $pid
       if [ $? -eq 0 ]; then
           echo "[${APP_NAME}]进程 $pid 已被成功杀掉。"
