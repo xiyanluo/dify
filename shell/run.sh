@@ -178,7 +178,7 @@ case "$1" in
    "db") #pgsql数据库迁移
     updateDb
     ;;
-   "vdb") #向量数据库更新
+   "vdb") #其它向量数据库更新
     updateVdb
     ;;
   *)
