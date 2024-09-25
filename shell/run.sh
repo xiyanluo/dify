@@ -2,8 +2,6 @@
 flask_name=flask
 flask_log=flask_log.out
 flask_processes=$(ps aux | grep flask | grep -v grep)
-
-
 celery_log=celery_log.out
 celery_processes=$(ps aux | grep celery | grep -v grep)
 
