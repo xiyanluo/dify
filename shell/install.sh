@@ -90,7 +90,6 @@ getStatus(){
   pyenv --version
   python3 --version
 }
-
 printSuccess() {
     echo -e "\033[0;32m$1\033[0m"
 }
