@@ -49,7 +49,10 @@ log_flask(){
   cd api
   tail -fn 200 $flask_log
 }
-
+restart_flask(){
+  stop_flask
+  start_flask
+}
 #-------------[celery] Worker服务----------
 is_exist_celery(){
   # 通过awk获取每个celery进程的PID
@@ -130,10 +133,7 @@ getStatus(){
   fi
 }
 
-restart(){
-  stop_flask
-  start_flask
-}
+
 case "$1" in
   "stop")
     stop_flask
@@ -166,7 +166,7 @@ case "$1" in
     startDocker
     ;;
   *)
-    restar./r
+    restart_flask
     ;;
 esac
 exit 0
