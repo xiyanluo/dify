@@ -108,7 +108,7 @@ installWeb(){
   npm install
 }
 
-start_docker(){
+startDocker(){
   cd docker
   docker-compose -f docker-compose.middleware.yaml up -d
 }
@@ -163,7 +163,7 @@ case "$1" in
     getStatus
     ;;
   "docker")
-    start_docker
+    startDocker
     ;;
   *)
     restart
