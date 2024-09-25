@@ -7,7 +7,7 @@ PYENV_URL="https://github.com/pyenv/pyenv.git"
 # Python环境信息
 PYTHON_VERSION="3.10.14"
 PYTHON_ARCHIVE="Python-$PYTHON_VERSION.tar.xz"
-PYTHON_URL="http://wp.dayousoft.com/py/$PYTHON_VERSION/$PYTHON_ARCHIVE"
+PYTHON_URL="http://wp.dayousoft.com/py/Python-3.10.14.tar.xz"
 
 install_git(){
   echo ">>>>>>>>> 1:正在配置Git环境 <<<<<<<<<<<"
