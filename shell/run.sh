@@ -142,7 +142,12 @@ getStatus(){
   echo "找到以下Docker服务:"
   cd docker && docker-compose ps
 }
-
+doInstall(){
+  startDocker
+  updateLib
+  updateDb
+  updateVdb
+}
 
 case "$1" in
   "stop")
@@ -180,6 +185,9 @@ case "$1" in
     ;;
    "vdb") #其它向量数据库更新
     updateVdb
+    ;;
+   "init") #第一次初始化
+    doInstall
     ;;
   *)
     restart_flask
