@@ -147,6 +147,7 @@ doInstall(){
   updateLib
   updateDb
   updateVdb
+  installWeb
 }
 
 case "$1" in
