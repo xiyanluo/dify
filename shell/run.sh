@@ -108,6 +108,8 @@ updateLib(){
 }
 installWeb(){
   cd web
+  npm cache clean --force
+  npm config set registry https://registry.npmmirror.com
   npm install
 }
 
