@@ -102,6 +102,7 @@ install_Poetry(){
 }
 
 install_Node(){
+  echo ">>>>>>>>> 4:正在配置Node环境 <<<<<<<<<<<"
   if command -v node > /dev/null 2>&1 && command -v npm > /dev/null 2>&1; then
       echo "- Node和npm已经安装。"
       echo "- Node版本: $(node -v)"
