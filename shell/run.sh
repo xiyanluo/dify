@@ -187,9 +187,6 @@ case "$1" in
    "vdb") #其它向量数据库更新
     updateVdb
     ;;
-   "init") #第一次初始化
-    doInstall
-    ;;
   *)
     restart_flask
     ;;
