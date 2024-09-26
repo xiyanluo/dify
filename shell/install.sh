@@ -39,8 +39,8 @@ install_git(){
   if [ $? -eq 0 ]; then
       printSuccess "- [Dify]拉取成功"
   else
-      printFail "- [Dify]拉取失败,请检查网络"
-      exit 1
+      printFail "- [Dify]拉取失败"
+#      exit 1
   fi
 }
 
@@ -122,11 +122,11 @@ install_Node(){
   fi
 }
 getStatus(){
-  pyenv --version
-  python3 --version
-  poetry --version
-  node -v
-  npm -v
+  echo "pyenv: $(pyenv --version)"
+  echo "python3: $(python3 --version)"
+  echo "poetry: $(poetry --version)"
+  echo "Node版本: $(node -v)"
+  echo "NPM版本: $(npm -v)"
 }
 printSuccess() {
     echo -e "\033[0;32m$1\033[0m"
