@@ -4,7 +4,9 @@ flask_log=flask_log.out
 flask_processes=$(ps aux | grep flask | grep -v grep)
 celery_log=celery_log.out
 celery_processes=$(ps aux | grep celery | grep -v grep)
-
+# 定义变量
+SOURCE_URL="https://pypi.tuna.tsinghua.edu.cn/simple/"
+SOURCE_NAME="mirrors"
 usage(){
     echo "Usage: sh 执行脚本.sh [start|stop|restart|status]"
     exit 1
@@ -104,7 +106,23 @@ updateGit(){
   git pull
 }
 updateLib(){
-  cd api && poetry env use 3.10 && poetry install
+  # 进入 API 目录
+  cd api
+  # 设置 Python 版本为 3.10
+  poetry env use 3.10
+  # 检查是否已经添加了指定的镜像源
+  if ! poetry config repositories.$SOURCE_NAME | grep -q "$SOURCE_URL"; then
+      echo "Adding new source: $SOURCE_NAME..."
+      poetry source add --priority primary $SOURCE_NAME $SOURCE_URL
+      poetry lock --no-update
+  else
+      echo "Source $SOURCE_NAME already exists."
+  fi
+  # 更新依赖锁文件，但不更新依赖本身
+  # 安装依赖
+  poetry install
+
+# cd api && poetry env use 3.10 && poetry install
 }
 installWeb(){
   cd web
