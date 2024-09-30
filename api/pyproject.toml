@@ -289,3 +289,9 @@ optional = true
 [tool.poetry.group.lint.dependencies]
 dotenv-linter = "~0.5.0"
 ruff = "~0.6.8"
+
+#设置poetry包管理工具的自定义pypi镜像源配置
+[[tool.poetry.source]]
+name = "aliyun"
+url = "http://mirrors.aliyun.com/pypi/simple"
+default = true
