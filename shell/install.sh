@@ -123,9 +123,9 @@ install_Node(){
   fi
 }
 getStatus(){
-  echo "pyenv: $(pyenv --version)"
-  echo "python3: $(python3 --version)"
-  echo "poetry: $(poetry --version)"
+  echo "pyenv版本: $(pyenv --version)"
+  echo "python3版本: $(python3 --version)"
+  echo "poetry版本: $(poetry --version)"
   echo "Node版本: $(node -v)"
   echo "NPM版本: $(npm -v)"
 }
