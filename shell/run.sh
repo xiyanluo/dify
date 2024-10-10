@@ -103,6 +103,7 @@ restart_celery(){
 }
 
 updateGit(){
+  git reset --hard
   git pull
 }
 updateLib(){
