@@ -20,7 +20,8 @@
       "prompt_name": "English",
       "example": "Hello, Dify!",
       "supported": true
-    },
+    }
+  /*,
     {
       "value": "pt-BR",
       "name": "Português (Brasil)",
@@ -139,6 +140,6 @@
       "prompt_name": "Farsi",
       "example": "سلام, دیفای!",
       "supported": true
-    }
+    }*/
   ]
 }
