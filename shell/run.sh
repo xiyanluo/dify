@@ -127,13 +127,14 @@ updateLib(){
 }
 installWeb(){
   cd web
-#  npm cache clean --force
-#  npm config set registry https://registry.npmmirror.com
-#  npm run build
-  pnpm cache clean
-  pnpm config set registry https://registry.npmmirror.com
-  pnpm install
-  pnpm run build
+  npm cache clean --force
+  npm config set registry https://registry.npmmirror.com
+  npm install
+  npm run build
+#  pnpm cache clean
+#  pnpm config set registry https://registry.npmmirror.com
+#  pnpm install
+#  pnpm run build
 }
 
 startDocker(){
