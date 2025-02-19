@@ -123,7 +123,7 @@ updateLib(){
   # 安装依赖
   poetry install
 
-# cd api && poetry env use 3.10 && poetry install
+# cd api && poetry env use 3.12 && poetry install
 }
 installWeb(){
   cd web
