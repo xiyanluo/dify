@@ -35,7 +35,8 @@ class AppService:
         :return:
         """
         filters = [App.tenant_id == tenant_id, App.is_universal == False]
-
+        if current_user.name != "admin":
+            filters.append(App.created_by == current_user.id)
         if args["mode"] == "workflow":
             filters.append(App.mode.in_([AppMode.WORKFLOW.value, AppMode.COMPLETION.value]))
         elif args["mode"] == "chat":
