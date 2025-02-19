@@ -498,8 +498,8 @@ const translation = {
   about: {
     changeLog: 'Dziennik zmian',
     updateNow: 'Aktualizuj teraz',
-    nowAvailable: 'Dify {{version}} jest teraz dostępny.',
-    latestAvailable: 'Dify {{version}} jest najnowszą dostępną wersją.',
+    nowAvailable: '{{version}} jest teraz dostępny.',
+    latestAvailable: '{{version}} jest najnowszą dostępną wersją.',
   },
   appMenus: {
     overview: 'Monitorowanie',

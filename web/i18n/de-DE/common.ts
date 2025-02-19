@@ -484,8 +484,8 @@ const translation = {
   about: {
     changeLog: 'Änderungsprotokoll',
     updateNow: 'Jetzt aktualisieren',
-    nowAvailable: 'Dify {{version}} ist jetzt verfügbar.',
-    latestAvailable: 'Dify {{version}} ist die neueste verfügbare Version.',
+    nowAvailable: '{{version}} ist jetzt verfügbar.',
+    latestAvailable: '{{version}} ist die neueste verfügbare Version.',
   },
   appMenus: {
     overview: 'Übersicht',
