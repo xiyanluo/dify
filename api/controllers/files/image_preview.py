@@ -19,20 +19,16 @@ class ImagePreviewApi(Resource):
     def get(self, file_id):
         file_id = str(file_id)
 
-        timestamp = request.args.get("timestamp")
-        nonce = request.args.get("nonce")
-        sign = request.args.get("sign")
-
-        if not timestamp or not nonce or not sign:
-            return {"content": "Invalid request."}, 400
+        # timestamp = request.args.get("timestamp")
+        # nonce = request.args.get("nonce")
+        # sign = request.args.get("sign")
+        #
+        # if not timestamp or not nonce or not sign:
+        #     return {"content": "Invalid request."}, 400
 
         try:
-            generator, mimetype = FileService.get_image_preview(
-                file_id=file_id,
-                timestamp=timestamp,
-                nonce=nonce,
-                sign=sign,
-            )
+            # generator, mimetype = FileService.get_image_preview(file_id, timestamp, nonce, sign)
+            generator, mimetype = FileService.get_image_preview(file_id,None,None,None)
         except services.errors.file.UnsupportedFileTypeError:
             raise UnsupportedFileTypeError()
 
