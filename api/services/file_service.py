@@ -153,11 +153,11 @@ class FileService:
 
     @staticmethod
     def get_image_preview(file_id: str, timestamp: str, nonce: str, sign: str):
-        result = file_helpers.verify_image_signature(
-            upload_file_id=file_id, timestamp=timestamp, nonce=nonce, sign=sign
-        )
-        if not result:
-            raise NotFound("File not found or signature is invalid")
+        # result = file_helpers.verify_image_signature(
+        #     upload_file_id=file_id, timestamp=timestamp, nonce=nonce, sign=sign
+        # )
+        # if not result:
+        #     raise NotFound("File not found or signature is invalid")
 
         upload_file = db.session.query(UploadFile).filter(UploadFile.id == file_id).first()
 
