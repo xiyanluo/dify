@@ -5,9 +5,9 @@ DIFY_URL="https://github.com/xiyanluo/dify.git"
 # Pyenv环境信息
 PYENV_URL="https://github.com/pyenv/pyenv.git"
 # Python环境信息
-PYTHON_VERSION="3.12.7"
+PYTHON_VERSION="3.12.6"
 PYTHON_ARCHIVE="Python-$PYTHON_VERSION.tar.xz"
-PYTHON_URL="http://wp.dayousoft.com/py/Python-3.12.7.tar.xz"
+PYTHON_URL="http://wp.dayousoft.com/py/Python-3.12.6.tar.xz"
 # node环境信息
 NODE_URL="https://rpm.nodesource.com/setup_20.x"
 
@@ -85,7 +85,7 @@ install_Python(){
   sudo yum groupinstall -y "Development Tools"
   # Upgrade pip and install necessary Python packages
   python3 -m pip install --upgrade pip setuptools wheel
-  python3 -m pip install grpcio==1.58.0 frozendict kaleido unstructured
+  python3 -m pip install grpcio==1.60.0 frozendict kaleido unstructured
 }
 
 install_Poetry(){
