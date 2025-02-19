@@ -5,9 +5,9 @@ DIFY_URL="https://github.com/xiyanluo/dify.git"
 # Pyenv环境信息
 PYENV_URL="https://github.com/pyenv/pyenv.git"
 # Python环境信息
-PYTHON_VERSION="3.12.9"
+PYTHON_VERSION="3.12.7"
 PYTHON_ARCHIVE="Python-$PYTHON_VERSION.tar.xz"
-PYTHON_URL="http://wp.dayousoft.com/py/Python-3.12.9.tar.xz"
+PYTHON_URL="http://wp.dayousoft.com/py/Python-3.12.7.tar.xz"
 # node环境信息
 NODE_URL="https://rpm.nodesource.com/setup_20.x"
 
