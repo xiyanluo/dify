@@ -134,7 +134,7 @@ installWeb(){
   pnpm cache clean
   pnpm config set registry https://registry.npmmirror.com
   pnpm install
-  pnpm run build
+  NODE_OPTIONS="--max-old-space-size=4096" pnpm run build
 }
 
 startDocker(){
