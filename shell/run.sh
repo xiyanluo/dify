@@ -109,6 +109,7 @@ updateGit(){
 updateLib(){
   # 进入 API 目录
   cd api
+  poetry lock
   # 设置 Python 版本为 3.12
   poetry env use 3.12
   # 检查是否已经添加了指定的镜像源
