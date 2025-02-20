@@ -1,9 +1,9 @@
 # Git用户配置信息
 GIT_USER_NAME="小HUI灰"
 GIT_USER_EMAIL="21794468@qq.com"
-DIFY_URL="https://github.com/xiyanluo/dify.git"
+DIFY_URL="https://ghfast.top/https://github.com/xiyanluo/dify.git"
 # Pyenv环境信息
-PYENV_URL="https://github.com/pyenv/pyenv.git"
+PYENV_URL="https://ghfast.top/https://github.com/pyenv/pyenv.git"
 # Python环境信息
 PYTHON_VERSION="3.12.6"
 PYTHON_ARCHIVE="Python-$PYTHON_VERSION.tar.xz"
