@@ -258,6 +258,11 @@ export function Markdown(props: { content: string; className?: string }) {
                 if (node.type === 'element' && node.properties?.ref)
                   delete node.properties.ref
 
+                if (node.type === 'element' && !/^[a-z][a-z0-9]*$/i.test(node.tagName)) {
+                  node.type = 'text'
+                  node.value = `<${node.tagName}`
+                }
+
                 if (node.children)
                   node.children.forEach(iterate)
               }
@@ -265,7 +270,7 @@ export function Markdown(props: { content: string; className?: string }) {
             }
           },
         ]}
-        disallowedElements={['iframe', 'head', 'html', 'meta', 'link', 'style', 'body']}
+        disallowedElements={['iframe', 'head', 'html', 'meta', 'link', 'style', 'body', 'input']}
         components={{
           code: CodeBlock,
           img: Img,
