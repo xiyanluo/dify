@@ -85,7 +85,7 @@ install_Python(){
   sudo yum groupinstall -y "Development Tools"
   # Upgrade pip and install necessary Python packages
   python3 -m pip install --upgrade pip setuptools wheel
-  python3 -m pip install grpcio==1.60.0 frozendict kaleido unstructured
+  python3 -m pip install grpcio==1.60.0 -i https://pypi.org/simple
 }
 
 install_Poetry(){
