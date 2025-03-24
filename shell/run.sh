@@ -132,6 +132,14 @@ installWeb(){
 #  npm config set registry https://registry.npmmirror.com
 #  npm install
 #  npm run build
+  # 检查 pnpm 是否已安装
+  if ! command -v pnpm &> /dev/null; then
+      echo "pnpm 未安装，正在安装..."
+      npm install -g pnpm
+  else
+      echo "pnpm 已安装，版本: $(pnpm --version)"
+  fi
+  # 清理 pnpm 缓存
   pnpm cache clean
   pnpm config set registry https://registry.npmmirror.com
   pnpm install
