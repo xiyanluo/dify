@@ -173,7 +173,7 @@ doInstall(){
   startDocker
   updateLib
   updateDb
-  updateVdb
+#  updateVdb
   installWeb
 }
 
