@@ -42,7 +42,7 @@ stop_flask(){
 
 start_flask(){
   cd api
-  nohup poetry run $flask_name run --host 0.0.0.0 --port 5001 --debug > $flask_log 2>&1 &
+  nohup uv run $flask_name run --host 0.0.0.0 --port 5001 --debug > $flask_log 2>&1 &
   echo ">>> 启动 $flask_name 成功 PID=$! <<<"
 	tail -fn 200 $flask_log
 }
@@ -87,7 +87,7 @@ stop_celery(){
 
 start_celery(){
   cd api
-  nohup poetry run celery -A app.celery worker -P gevent -c 1 -Q dataset,generation,mail,ops_trace --loglevel INFO > $celery_log 2>&1 & disown
+  nohup uv run celery -A app.celery worker -P gevent -c 1 -Q dataset,generation,mail,ops_trace --loglevel INFO > $celery_log 2>&1 & disown
   echo ">>> 启动 celery 成功 PID=$! <<<"
   sleep 2; echo "$celery_processes"
 }
@@ -109,20 +109,9 @@ updateGit(){
 updateLib(){
   # 进入 API 目录
   cd api
-  poetry lock
-  # 设置 Python 版本为 3.12
-  poetry env use 3.12
-  # 检查是否已经添加了指定的镜像源
-  if ! poetry config repositories.$SOURCE_NAME | grep -q "$SOURCE_URL"; then
-      echo "Adding new source: $SOURCE_NAME..."
-      poetry source add --priority primary $SOURCE_NAME $SOURCE_URL
-      poetry lock --no-update
-  else
-      echo "Source $SOURCE_NAME already exists."
-  fi
-  # 更新依赖锁文件，但不更新依赖本身
-  # 安装依赖
-  poetry install
+  export UV_HTTP_TIMEOUT=240
+  uv add --default-index https://pypi.tuna.tsinghua.edu.cn/simple requests
+  uv sync
 
 # cd api && poetry env use 3.12 && poetry install
 }
@@ -152,10 +141,10 @@ startDocker(){
 }
 
 updateDb(){
-  cd api && poetry run flask db upgrade
+  cd api && uv run flask db upgrade
 }
 updateVdb(){
-  cd api && poetry run flask vdb-migrate
+  cd api && uv run flask vdb-migrate
 }
 
 getStatus(){
