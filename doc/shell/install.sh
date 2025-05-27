@@ -88,17 +88,17 @@ install_Python(){
   python3 -m pip install grpcio==1.60.0 -i https://pypi.org/simple
 }
 
-install_Poetry(){
-  echo ">>>>>>>>> 3:正在配置Poetry环境 <<<<<<<<<<<"
-  # 检查 poetry 是否已安装
-  if ! command -v poetry &> /dev/null
+install_uv(){
+  echo ">>>>>>>>> 3:正在配置UV环境 <<<<<<<<<<<"
+  # 检查 uv 是否已安装
+  if ! command -v uv &> /dev/null
   then
-      echo "[poetry]现在将通过 pip 安装..."
-      pip install poetry
+      echo "[uv]现在将通过 pip 安装..."
+      pip install uv
   else
-      echo "[poetry]已安装"
+      echo "[uv]已安装"
   fi
-  poetry --version
+  uv --version
 }
 
 install_Node(){
@@ -125,7 +125,7 @@ install_Node(){
 getStatus(){
   echo "pyenv版本: $(pyenv --version)"
   echo "python3版本: $(python3 --version)"
-  echo "poetry版本: $(poetry --version)"
+  echo "uv版本: $(uv --version)"
   echo "Node版本: $(node -v)"
   echo "NPM版本: $(npm -v)"
 }
@@ -139,7 +139,7 @@ restart(){
   install_git
   install_pyenv
   install_Python
-  install_Poetry
+  install_uv
   install_Node
 }
 case "$1" in
@@ -151,7 +151,7 @@ case "$1" in
     ;;
   "pyenv")
     install_pyenv
-    install_Poetry
+    install_uv
     ;;
   *)
     restart
