@@ -44,15 +44,16 @@ from core.app.entities.task_entities import (
 )
 from core.file import FILE_MODEL_IDENTITY, File
 from core.tools.tool_manager import ToolManager
-from core.workflow.entities.node_execution_entities import NodeExecution
-from core.workflow.entities.workflow_execution_entities import WorkflowExecution
+from core.variables.segments import ArrayFileSegment, FileSegment, Segment
+from core.workflow.entities.workflow_execution import WorkflowExecution
+from core.workflow.entities.workflow_node_execution import WorkflowNodeExecution, WorkflowNodeExecutionStatus
 from core.workflow.nodes import NodeType
 from core.workflow.nodes.tool.entities import ToolNodeData
+from core.workflow.workflow_type_encoder import WorkflowRuntimeTypeConverter
 from models import (
     Account,
     CreatorUserRole,
     EndUser,
-    WorkflowNodeExecutionStatus,
     WorkflowRun,
 )
 
@@ -73,11 +74,10 @@ class WorkflowResponseConverter:
     ) -> WorkflowStartStreamResponse:
         return WorkflowStartStreamResponse(
             task_id=task_id,
-            workflow_run_id=workflow_execution.id,
+            workflow_run_id=workflow_execution.id_,
             data=WorkflowStartStreamResponse.Data(
-                id=workflow_execution.id,
+                id=workflow_execution.id_,
                 workflow_id=workflow_execution.workflow_id,
-                sequence_number=workflow_execution.sequence_number,
                 inputs=workflow_execution.inputs,
                 created_at=int(workflow_execution.started_at.timestamp()),
             ),
@@ -91,7 +91,7 @@ class WorkflowResponseConverter:
         workflow_execution: WorkflowExecution,
     ) -> WorkflowFinishStreamResponse:
         created_by = None
-        workflow_run = session.scalar(select(WorkflowRun).where(WorkflowRun.id == workflow_execution.id))
+        workflow_run = session.scalar(select(WorkflowRun).where(WorkflowRun.id == workflow_execution.id_))
         assert workflow_run is not None
         if workflow_run.created_by_role == CreatorUserRole.ACCOUNT:
             stmt = select(Account).where(Account.id == workflow_run.created_by)
@@ -122,13 +122,12 @@ class WorkflowResponseConverter:
 
         return WorkflowFinishStreamResponse(
             task_id=task_id,
-            workflow_run_id=workflow_execution.id,
+            workflow_run_id=workflow_execution.id_,
             data=WorkflowFinishStreamResponse.Data(
-                id=workflow_execution.id,
+                id=workflow_execution.id_,
                 workflow_id=workflow_execution.workflow_id,
-                sequence_number=workflow_execution.sequence_number,
                 status=workflow_execution.status,
-                outputs=workflow_execution.outputs,
+                outputs=WorkflowRuntimeTypeConverter().to_json_encodable(workflow_execution.outputs),
                 error=workflow_execution.error_message,
                 elapsed_time=workflow_execution.elapsed_time,
                 total_tokens=workflow_execution.total_tokens,
@@ -146,16 +145,16 @@ class WorkflowResponseConverter:
         *,
         event: QueueNodeStartedEvent,
         task_id: str,
-        workflow_node_execution: NodeExecution,
+        workflow_node_execution: WorkflowNodeExecution,
     ) -> Optional[NodeStartStreamResponse]:
         if workflow_node_execution.node_type in {NodeType.ITERATION, NodeType.LOOP}:
             return None
-        if not workflow_node_execution.workflow_run_id:
+        if not workflow_node_execution.workflow_execution_id:
             return None
 
         response = NodeStartStreamResponse(
             task_id=task_id,
-            workflow_run_id=workflow_node_execution.workflow_run_id,
+            workflow_run_id=workflow_node_execution.workflow_execution_id,
             data=NodeStartStreamResponse.Data(
                 id=workflow_node_execution.id,
                 node_id=workflow_node_execution.node_id,
@@ -196,18 +195,20 @@ class WorkflowResponseConverter:
         | QueueNodeInLoopFailedEvent
         | QueueNodeExceptionEvent,
         task_id: str,
-        workflow_node_execution: NodeExecution,
+        workflow_node_execution: WorkflowNodeExecution,
     ) -> Optional[NodeFinishStreamResponse]:
         if workflow_node_execution.node_type in {NodeType.ITERATION, NodeType.LOOP}:
             return None
-        if not workflow_node_execution.workflow_run_id:
+        if not workflow_node_execution.workflow_execution_id:
             return None
         if not workflow_node_execution.finished_at:
             return None
 
+        json_converter = WorkflowRuntimeTypeConverter()
+
         return NodeFinishStreamResponse(
             task_id=task_id,
-            workflow_run_id=workflow_node_execution.workflow_run_id,
+            workflow_run_id=workflow_node_execution.workflow_execution_id,
             data=NodeFinishStreamResponse.Data(
                 id=workflow_node_execution.id,
                 node_id=workflow_node_execution.node_id,
@@ -217,7 +218,7 @@ class WorkflowResponseConverter:
                 predecessor_node_id=workflow_node_execution.predecessor_node_id,
                 inputs=workflow_node_execution.inputs,
                 process_data=workflow_node_execution.process_data,
-                outputs=workflow_node_execution.outputs,
+                outputs=json_converter.to_json_encodable(workflow_node_execution.outputs),
                 status=workflow_node_execution.status,
                 error=workflow_node_execution.error,
                 elapsed_time=workflow_node_execution.elapsed_time,
@@ -239,18 +240,20 @@ class WorkflowResponseConverter:
         *,
         event: QueueNodeRetryEvent,
         task_id: str,
-        workflow_node_execution: NodeExecution,
+        workflow_node_execution: WorkflowNodeExecution,
     ) -> Optional[Union[NodeRetryStreamResponse, NodeFinishStreamResponse]]:
         if workflow_node_execution.node_type in {NodeType.ITERATION, NodeType.LOOP}:
             return None
-        if not workflow_node_execution.workflow_run_id:
+        if not workflow_node_execution.workflow_execution_id:
             return None
         if not workflow_node_execution.finished_at:
             return None
 
+        json_converter = WorkflowRuntimeTypeConverter()
+
         return NodeRetryStreamResponse(
             task_id=task_id,
-            workflow_run_id=workflow_node_execution.workflow_run_id,
+            workflow_run_id=workflow_node_execution.workflow_execution_id,
             data=NodeRetryStreamResponse.Data(
                 id=workflow_node_execution.id,
                 node_id=workflow_node_execution.node_id,
@@ -260,7 +263,7 @@ class WorkflowResponseConverter:
                 predecessor_node_id=workflow_node_execution.predecessor_node_id,
                 inputs=workflow_node_execution.inputs,
                 process_data=workflow_node_execution.process_data,
-                outputs=workflow_node_execution.outputs,
+                outputs=json_converter.to_json_encodable(workflow_node_execution.outputs),
                 status=workflow_node_execution.status,
                 error=workflow_node_execution.error,
                 elapsed_time=workflow_node_execution.elapsed_time,
@@ -379,6 +382,7 @@ class WorkflowResponseConverter:
         workflow_execution_id: str,
         event: QueueIterationCompletedEvent,
     ) -> IterationNodeCompletedStreamResponse:
+        json_converter = WorkflowRuntimeTypeConverter()
         return IterationNodeCompletedStreamResponse(
             task_id=task_id,
             workflow_run_id=workflow_execution_id,
@@ -387,7 +391,7 @@ class WorkflowResponseConverter:
                 node_id=event.node_id,
                 node_type=event.node_type.value,
                 title=event.node_data.title,
-                outputs=event.outputs,
+                outputs=json_converter.to_json_encodable(event.outputs),
                 created_at=int(time.time()),
                 extras={},
                 inputs=event.inputs or {},
@@ -466,7 +470,7 @@ class WorkflowResponseConverter:
                 node_id=event.node_id,
                 node_type=event.node_type.value,
                 title=event.node_data.title,
-                outputs=event.outputs,
+                outputs=WorkflowRuntimeTypeConverter().to_json_encodable(event.outputs),
                 created_at=int(time.time()),
                 extras={},
                 inputs=event.inputs or {},
@@ -503,7 +507,8 @@ class WorkflowResponseConverter:
         # Convert to tuple to match Sequence type
         return tuple(flattened_files)
 
-    def _fetch_files_from_variable_value(self, value: Union[dict, list]) -> Sequence[Mapping[str, Any]]:
+    @classmethod
+    def _fetch_files_from_variable_value(cls, value: Union[dict, list, Segment]) -> Sequence[Mapping[str, Any]]:
         """
         Fetch files from variable value
         :param value: variable value
@@ -512,20 +517,30 @@ class WorkflowResponseConverter:
         if not value:
             return []
 
-        files = []
-        if isinstance(value, list):
+        files: list[Mapping[str, Any]] = []
+        if isinstance(value, FileSegment):
+            files.append(value.value.to_dict())
+        elif isinstance(value, ArrayFileSegment):
+            files.extend([i.to_dict() for i in value.value])
+        elif isinstance(value, File):
+            files.append(value.to_dict())
+        elif isinstance(value, list):
             for item in value:
-                file = self._get_file_var_from_value(item)
+                file = cls._get_file_var_from_value(item)
                 if file:
                     files.append(file)
-        elif isinstance(value, dict):
-            file = self._get_file_var_from_value(value)
+        elif isinstance(
+            value,
+            dict,
+        ):
+            file = cls._get_file_var_from_value(value)
             if file:
                 files.append(file)
 
         return files
 
-    def _get_file_var_from_value(self, value: Union[dict, list]) -> Mapping[str, Any] | None:
+    @classmethod
+    def _get_file_var_from_value(cls, value: Union[dict, list]) -> Mapping[str, Any] | None:
         """
         Get file var from value
         :param value: variable value

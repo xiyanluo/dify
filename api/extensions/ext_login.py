@@ -5,13 +5,12 @@ from flask import Response, request
 from flask_login import user_loaded_from_request, user_logged_in
 from werkzeug.exceptions import NotFound, Unauthorized
 
-import contexts
 from configs import dify_config
 from dify_app import DifyApp
 from extensions.ext_database import db
 from libs.passport import PassportService
 from models.account import Account, Tenant, TenantAccountJoin
-from models.model import EndUser
+from models.model import AppMCPServer, EndUser
 from services.account_service import AccountService
 
 login_manager = flask_login.LoginManager()
@@ -41,9 +40,9 @@ def load_user_from_request(request_from_flask_login):
             if workspace_id:
                 tenant_account_join = (
                     db.session.query(Tenant, TenantAccountJoin)
-                    .filter(Tenant.id == workspace_id)
-                    .filter(TenantAccountJoin.tenant_id == Tenant.id)
-                    .filter(TenantAccountJoin.role == "owner")
+                    .where(Tenant.id == workspace_id)
+                    .where(TenantAccountJoin.tenant_id == Tenant.id)
+                    .where(TenantAccountJoin.role == "owner")
                     .one_or_none()
                 )
                 if tenant_account_join:
@@ -58,6 +57,9 @@ def load_user_from_request(request_from_flask_login):
             raise Unauthorized("Invalid Authorization token.")
         decoded = PassportService().verify(auth_token)
         user_id = decoded.get("user_id")
+        source = decoded.get("token_source")
+        if source:
+            raise Unauthorized("Invalid Authorization token.")
         if not user_id:
             raise Unauthorized("Invalid Authorization token.")
 
@@ -68,7 +70,22 @@ def load_user_from_request(request_from_flask_login):
         end_user_id = decoded.get("end_user_id")
         if not end_user_id:
             raise Unauthorized("Invalid Authorization token.")
-        end_user = db.session.query(EndUser).filter(EndUser.id == decoded["end_user_id"]).first()
+        end_user = db.session.query(EndUser).where(EndUser.id == decoded["end_user_id"]).first()
+        if not end_user:
+            raise NotFound("End user not found.")
+        return end_user
+    elif request.blueprint == "mcp":
+        server_code = request.view_args.get("server_code") if request.view_args else None
+        if not server_code:
+            raise Unauthorized("Invalid Authorization token.")
+        app_mcp_server = db.session.query(AppMCPServer).where(AppMCPServer.server_code == server_code).first()
+        if not app_mcp_server:
+            raise NotFound("App MCP server not found.")
+        end_user = (
+            db.session.query(EndUser)
+            .where(EndUser.external_user_id == app_mcp_server.id, EndUser.type == "mcp")
+            .first()
+        )
         if not end_user:
             raise NotFound("End user not found.")
         return end_user
@@ -82,8 +99,8 @@ def on_user_logged_in(_sender, user):
     Note: AccountService.load_logged_in_account will populate user.current_tenant_id
     through the load_user method, which calls account.set_tenant_id().
     """
-    if user and isinstance(user, Account) and user.current_tenant_id:
-        contexts.tenant_id.set(user.current_tenant_id)
+    # tenant_id context variable removed - using current_user.current_tenant_id directly
+    pass
 
 
 @login_manager.unauthorized_handler

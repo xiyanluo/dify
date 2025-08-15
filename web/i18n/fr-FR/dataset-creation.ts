@@ -23,6 +23,7 @@ const translation = {
     uploader: {
       title: 'Télécharger le fichier texte',
       button: 'Faites glisser et déposez des fichiers ou des dossiers, ou',
+      buttonSingleFile: 'Faites glisser et déposez un fichier, ou',
       browse: 'Parcourir',
       tip: 'Prend en charge {{supportTypes}}. Max {{size}}MB chacun.',
       validation: {
@@ -61,7 +62,6 @@ const translation = {
       preview: 'Aperçu',
       crawlSubPage: 'Explorer les sous-pages',
       configure: 'Configurer',
-      firecrawlDocLink: 'https://docs.dify.ai/en/guides/knowledge-base/create-knowledge-and-upload-documents/import-content-data/sync-from-website',
       maxDepth: 'Profondeur maximale',
       fireCrawlNotConfigured: 'Firecrawl n’est pas configuré',
       firecrawlTitle: 'Extraire du contenu web avec 🔥Firecrawl',
@@ -88,7 +88,6 @@ const translation = {
       configureJinaReader: 'Configurer le lecteur Jina',
       configureWatercrawl: 'Configurer Watercrawl',
       waterCrawlNotConfigured: 'Watercrawl n\'est pas configuré',
-      watercrawlDocLink: 'https://docs.dify.ai/fr/guide/base-de-connaissances/créer-des-connaissances-et-télécharger-des-documents/importer-des-données-de-contenu/synchroniser-depuis-un-site-web',
       configureFirecrawl: 'Configurer Firecrawl',
     },
     cancel: 'Annuler',
@@ -163,7 +162,7 @@ const translation = {
     general: 'Généralités',
     fullDocTip: 'L’intégralité du document est utilisée comme morceau parent et récupérée directement. Veuillez noter que pour des raisons de performance, le texte dépassant 10000 jetons sera automatiquement tronqué.',
     fullDoc: 'Doc complet',
-    previewChunkCount: '{{compte}} Tronçons estimés',
+    previewChunkCount: '{{count}} Tronçons estimés',
     childChunkForRetrieval: 'Child-chunk pour l’extraction',
     parentChildDelimiterTip: 'Un délimiteur est le caractère utilisé pour séparer le texte. \\n\\n est recommandé pour diviser le document d’origine en gros morceaux parents. Vous pouvez également utiliser des délimiteurs spéciaux définis par vous-même.',
     qaSwitchHighQualityTipTitle: 'Le format Q&R nécessite une méthode d’indexation de haute qualité',

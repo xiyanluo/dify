@@ -23,6 +23,7 @@ const translation = {
     uploader: {
       title: 'Încărcați fișier text',
       button: 'Trageți și plasați fișiere sau foldere sau',
+      buttonSingleFile: 'Trageți și plasați un fișier sau',
       browse: 'Răsfoire',
       tip: 'Acceptă {{supportTypes}}. Maxim {{size}}MB fiecare.',
       validation: {
@@ -65,7 +66,6 @@ const translation = {
       firecrawlTitle: 'Extrageți conținut web cu 🔥Firecrawl',
       unknownError: 'Eroare necunoscută',
       scrapTimeInfo: 'Pagini răzuite {{total}} în total în {{timp}}s',
-      firecrawlDocLink: 'https://docs.dify.ai/en/guides/knowledge-base/create-knowledge-and-upload-documents/import-content-data/sync-from-website',
       excludePaths: 'Excluderea căilor',
       resetAll: 'Resetați toate',
       extractOnlyMainContent: 'Extrageți doar conținutul principal (fără anteturi, navigări, subsoluri etc.)',
@@ -86,7 +86,6 @@ const translation = {
       watercrawlTitle: 'Extrageți conținut web cu Watercrawl',
       configureJinaReader: 'Configurează Jina Reader',
       waterCrawlNotConfiguredDescription: 'Configurează Watercrawl cu cheia API pentru a-l folosi.',
-      watercrawlDocLink: 'https://docs.dify.ai/en/guides/knowledge-base/create-knowledge-and-upload-documents/import-content-data/sync-from-website',
       configureFirecrawl: 'Configurează Firecrawl',
       watercrawlDoc: 'Documentele Watercrawl',
       configureWatercrawl: 'Configurează Watercrawl',

@@ -214,6 +214,34 @@ export const fetchWebOAuth2SSOUrl = async (appCode: string, redirectUrl: string)
   }) as Promise<{ url: string }>
 }
 
+export const fetchMembersSAMLSSOUrl = async (appCode: string, redirectUrl: string) => {
+  return (getAction('get', false))(getUrl('/enterprise/sso/members/saml/login', false, ''), {
+    params: {
+      app_code: appCode,
+      redirect_url: redirectUrl,
+    },
+  }) as Promise<{ url: string }>
+}
+
+export const fetchMembersOIDCSSOUrl = async (appCode: string, redirectUrl: string) => {
+  return (getAction('get', false))(getUrl('/enterprise/sso/members/oidc/login', false, ''), {
+    params: {
+      app_code: appCode,
+      redirect_url: redirectUrl,
+    },
+
+  }) as Promise<{ url: string }>
+}
+
+export const fetchMembersOAuth2SSOUrl = async (appCode: string, redirectUrl: string) => {
+  return (getAction('get', false))(getUrl('/enterprise/sso/members/oauth2/login', false, ''), {
+    params: {
+      app_code: appCode,
+      redirect_url: redirectUrl,
+    },
+  }) as Promise<{ url: string }>
+}
+
 export const fetchAppMeta = async (isInstalledApp: boolean, installedAppId = '') => {
   return (getAction('get', isInstalledApp))(getUrl('meta', isInstalledApp, installedAppId)) as Promise<AppMeta>
 }
@@ -258,18 +286,14 @@ export const textToAudioStream = (url: string, isPublicAPI: boolean, header: { c
   return (getAction('post', !isPublicAPI))(url, { body, header }, { needAllResponseContent: true })
 }
 
-export const fetchAccessToken = async (appCode: string, userId?: string) => {
+export const fetchAccessToken = async ({ appCode, userId, webAppAccessToken }: { appCode: string, userId?: string, webAppAccessToken?: string | null }) => {
   const headers = new Headers()
   headers.append('X-App-Code', appCode)
-  const url = userId ? `/passport?user_id=${encodeURIComponent(userId)}` : '/passport'
+  const params = new URLSearchParams()
+  webAppAccessToken && params.append('web_app_access_token', webAppAccessToken)
+  userId && params.append('user_id', userId)
+  const url = `/passport?${params.toString()}`
   return get(url, { headers }) as Promise<{ access_token: string }>
-}
-
-export const getAppAccessMode = (appId: string, isInstalledApp: boolean) => {
-  if (isInstalledApp)
-    return consoleGet<{ accessMode: AccessMode }>(`/enterprise/webapp/app/access-mode?appId=${appId}`)
-
-  return get<{ accessMode: AccessMode }>(`/webapp/access-mode?appId=${appId}`)
 }
 
 export const getUserCanAccess = (appId: string, isInstalledApp: boolean) => {
@@ -277,4 +301,8 @@ export const getUserCanAccess = (appId: string, isInstalledApp: boolean) => {
     return consoleGet<{ result: boolean }>(`/enterprise/webapp/permission?appId=${appId}`)
 
   return get<{ result: boolean }>(`/webapp/permission?appId=${appId}`)
+}
+
+export const getAppAccessModeByAppCode = (appCode: string) => {
+  return get<{ accessMode: AccessMode }>(`/webapp/access-mode?appCode=${appCode}`)
 }

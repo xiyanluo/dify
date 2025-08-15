@@ -6,7 +6,7 @@ from typing import Optional, cast
 
 from opik import Opik, Trace
 from opik.id_helpers import uuid4_to_uuid7
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from core.ops.base_trace_instance import BaseTraceInstance
 from core.ops.entities.config_entity import OpikConfig
@@ -21,11 +21,11 @@ from core.ops.entities.trace_entity import (
     TraceTaskName,
     WorkflowTraceInfo,
 )
-from core.repositories import SQLAlchemyWorkflowNodeExecutionRepository
-from core.workflow.entities.node_entities import NodeRunMetadataKey
+from core.repositories import DifyCoreRepositoryFactory
+from core.workflow.entities.workflow_node_execution import WorkflowNodeExecutionMetadataKey
 from core.workflow.nodes.enums import NodeType
 from extensions.ext_database import db
-from models import Account, App, EndUser, MessageFile, WorkflowNodeExecutionTriggeredFrom
+from models import EndUser, MessageFile, WorkflowNodeExecutionTriggeredFrom
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +96,7 @@ class OpikDataTrace(BaseTraceInstance):
             self.generate_name_trace(trace_info)
 
     def workflow_trace(self, trace_info: WorkflowTraceInfo):
-        dify_trace_id = trace_info.workflow_run_id
+        dify_trace_id = trace_info.trace_id or trace_info.workflow_run_id
         opik_trace_id = prepare_opik_uuid(trace_info.start_time, dify_trace_id)
         workflow_metadata = wrap_metadata(
             trace_info.metadata, message_id=trace_info.message_id, workflow_app_log_id=trace_info.workflow_app_log_id
@@ -104,7 +104,7 @@ class OpikDataTrace(BaseTraceInstance):
         root_span_id = None
 
         if trace_info.message_id:
-            dify_trace_id = trace_info.message_id
+            dify_trace_id = trace_info.trace_id or trace_info.message_id
             opik_trace_id = prepare_opik_uuid(trace_info.start_time, dify_trace_id)
 
             trace_data = {
@@ -154,27 +154,16 @@ class OpikDataTrace(BaseTraceInstance):
         # through workflow_run_id get all_nodes_execution using repository
         session_factory = sessionmaker(bind=db.engine)
         # Find the app's creator account
-        with Session(db.engine, expire_on_commit=False) as session:
-            # Get the app to find its creator
-            app_id = trace_info.metadata.get("app_id")
-            if not app_id:
-                raise ValueError("No app_id found in trace_info metadata")
+        app_id = trace_info.metadata.get("app_id")
+        if not app_id:
+            raise ValueError("No app_id found in trace_info metadata")
 
-            app = session.query(App).filter(App.id == app_id).first()
-            if not app:
-                raise ValueError(f"App with id {app_id} not found")
+        service_account = self.get_service_account_with_tenant(app_id)
 
-            if not app.created_by:
-                raise ValueError(f"App with id {app_id} has no creator (created_by is None)")
-
-            service_account = session.query(Account).filter(Account.id == app.created_by).first()
-            if not service_account:
-                raise ValueError(f"Creator account with id {app.created_by} not found for app {app_id}")
-
-        workflow_node_execution_repository = SQLAlchemyWorkflowNodeExecutionRepository(
+        workflow_node_execution_repository = DifyCoreRepositoryFactory.create_workflow_node_execution_repository(
             session_factory=session_factory,
             user=service_account,
-            app_id=trace_info.metadata.get("app_id"),
+            app_id=app_id,
             triggered_from=WorkflowNodeExecutionTriggeredFrom.WORKFLOW_RUN,
         )
 
@@ -233,10 +222,10 @@ class OpikDataTrace(BaseTraceInstance):
                 )
 
                 try:
-                    if outputs.get("usage"):
-                        total_tokens = outputs["usage"].get("total_tokens", 0)
-                        prompt_tokens = outputs["usage"].get("prompt_tokens", 0)
-                        completion_tokens = outputs["usage"].get("completion_tokens", 0)
+                    usage_data = process_data.get("usage", {}) if "usage" in process_data else outputs.get("usage", {})
+                    total_tokens = usage_data.get("total_tokens", 0)
+                    prompt_tokens = usage_data.get("prompt_tokens", 0)
+                    completion_tokens = usage_data.get("completion_tokens", 0)
                 except Exception:
                     logger.error("Failed to extract usage", exc_info=True)
 
@@ -246,13 +235,13 @@ class OpikDataTrace(BaseTraceInstance):
             parent_span_id = trace_info.workflow_app_log_id or trace_info.workflow_run_id
 
             if not total_tokens:
-                total_tokens = execution_metadata.get(NodeRunMetadataKey.TOTAL_TOKENS) or 0
+                total_tokens = execution_metadata.get(WorkflowNodeExecutionMetadataKey.TOTAL_TOKENS) or 0
 
             span_data = {
                 "trace_id": opik_trace_id,
                 "id": prepare_opik_uuid(created_at, node_execution_id),
                 "parent_span_id": prepare_opik_uuid(trace_info.start_time, parent_span_id),
-                "name": node_type,
+                "name": node_name,
                 "type": run_type,
                 "start_time": created_at,
                 "end_time": finished_at,
@@ -286,7 +275,7 @@ class OpikDataTrace(BaseTraceInstance):
             return
 
         metadata = trace_info.metadata
-        message_id = trace_info.message_id
+        dify_trace_id = trace_info.trace_id or trace_info.message_id
 
         user_id = message_data.from_account_id
         metadata["user_id"] = user_id
@@ -294,14 +283,14 @@ class OpikDataTrace(BaseTraceInstance):
 
         if message_data.from_end_user_id:
             end_user_data: Optional[EndUser] = (
-                db.session.query(EndUser).filter(EndUser.id == message_data.from_end_user_id).first()
+                db.session.query(EndUser).where(EndUser.id == message_data.from_end_user_id).first()
             )
             if end_user_data is not None:
                 end_user_id = end_user_data.session_id
                 metadata["end_user_id"] = end_user_id
 
         trace_data = {
-            "id": prepare_opik_uuid(trace_info.start_time, message_id),
+            "id": prepare_opik_uuid(trace_info.start_time, dify_trace_id),
             "name": TraceTaskName.MESSAGE_TRACE.value,
             "start_time": trace_info.start_time,
             "end_time": trace_info.end_time,
@@ -340,7 +329,7 @@ class OpikDataTrace(BaseTraceInstance):
         start_time = trace_info.start_time or trace_info.message_data.created_at
 
         span_data = {
-            "trace_id": prepare_opik_uuid(start_time, trace_info.message_id),
+            "trace_id": prepare_opik_uuid(start_time, trace_info.trace_id or trace_info.message_id),
             "name": TraceTaskName.MODERATION_TRACE.value,
             "type": "tool",
             "start_time": start_time,
@@ -366,7 +355,7 @@ class OpikDataTrace(BaseTraceInstance):
         start_time = trace_info.start_time or message_data.created_at
 
         span_data = {
-            "trace_id": prepare_opik_uuid(start_time, trace_info.message_id),
+            "trace_id": prepare_opik_uuid(start_time, trace_info.trace_id or trace_info.message_id),
             "name": TraceTaskName.SUGGESTED_QUESTION_TRACE.value,
             "type": "tool",
             "start_time": start_time,
@@ -386,7 +375,7 @@ class OpikDataTrace(BaseTraceInstance):
         start_time = trace_info.start_time or trace_info.message_data.created_at
 
         span_data = {
-            "trace_id": prepare_opik_uuid(start_time, trace_info.message_id),
+            "trace_id": prepare_opik_uuid(start_time, trace_info.trace_id or trace_info.message_id),
             "name": TraceTaskName.DATASET_RETRIEVAL_TRACE.value,
             "type": "tool",
             "start_time": start_time,
@@ -401,7 +390,7 @@ class OpikDataTrace(BaseTraceInstance):
 
     def tool_trace(self, trace_info: ToolTraceInfo):
         span_data = {
-            "trace_id": prepare_opik_uuid(trace_info.start_time, trace_info.message_id),
+            "trace_id": prepare_opik_uuid(trace_info.start_time, trace_info.trace_id or trace_info.message_id),
             "name": trace_info.tool_name,
             "type": "tool",
             "start_time": trace_info.start_time,
@@ -416,7 +405,7 @@ class OpikDataTrace(BaseTraceInstance):
 
     def generate_name_trace(self, trace_info: GenerateNameTraceInfo):
         trace_data = {
-            "id": prepare_opik_uuid(trace_info.start_time, trace_info.message_id),
+            "id": prepare_opik_uuid(trace_info.start_time, trace_info.trace_id or trace_info.message_id),
             "name": TraceTaskName.GENERATE_NAME_TRACE.value,
             "start_time": trace_info.start_time,
             "end_time": trace_info.end_time,
@@ -463,12 +452,12 @@ class OpikDataTrace(BaseTraceInstance):
             self.opik_client.auth_check()
             return True
         except Exception as e:
-            logger.info(f"Opik API check failed: {str(e)}", exc_info=True)
+            logger.info("Opik API check failed: %s", str(e), exc_info=True)
             raise ValueError(f"Opik API check failed: {str(e)}")
 
     def get_project_url(self):
         try:
             return self.opik_client.get_project_url(project_name=self.project)
         except Exception as e:
-            logger.info(f"Opik get run url failed: {str(e)}", exc_info=True)
+            logger.info("Opik get run url failed: %s", str(e), exc_info=True)
             raise ValueError(f"Opik get run url failed: {str(e)}")

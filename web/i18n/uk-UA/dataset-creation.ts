@@ -23,6 +23,7 @@ const translation = {
     uploader: {
       title: 'Завантажити текстовий файл',
       button: 'Перетягніть файли або папки або',
+      buttonSingleFile: 'Перетягніть файл або',
       browse: 'Оберіть',
       tip: 'Підтримуються {{supportTypes}}. Максимум {{size}} МБ кожен.',
       validation: {
@@ -60,7 +61,6 @@ const translation = {
       unknownError: 'Невідома помилка',
       maxDepth: 'Максимальна глибина',
       crawlSubPage: 'Сканування підсторінок',
-      firecrawlDocLink: 'https://docs.dify.ai/en/guides/knowledge-base/create-knowledge-and-upload-documents/import-content-data/sync-from-website',
       preview: 'Попередній перегляд',
       fireCrawlNotConfigured: 'Firecrawl не налаштовано',
       includeOnlyPaths: 'Включати лише контури',
@@ -88,7 +88,6 @@ const translation = {
       configureFirecrawl: 'Налаштування Firecrawl',
       configureWatercrawl: 'Налаштування Watercrawl',
       watercrawlTitle: 'Витягуйте веб-контент за допомогою Watercrawl',
-      watercrawlDocLink: 'https://docs.dify.ai/en/guides/knowledge-base/create-knowledge-and-upload-documents/import-content-data/sync-from-website',
       watercrawlDoc: 'Документація Watercrawl',
     },
     cancel: 'Скасувати',

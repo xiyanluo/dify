@@ -6,7 +6,7 @@ from typing import Any, Optional, cast
 
 import wandb
 import weave
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from core.ops.base_trace_instance import BaseTraceInstance
 from core.ops.entities.config_entity import WeaveConfig
@@ -22,11 +22,11 @@ from core.ops.entities.trace_entity import (
     WorkflowTraceInfo,
 )
 from core.ops.weave_trace.entities.weave_trace_entity import WeaveTraceModel
-from core.repositories import SQLAlchemyWorkflowNodeExecutionRepository
-from core.workflow.entities.node_entities import NodeRunMetadataKey
+from core.repositories import DifyCoreRepositoryFactory
+from core.workflow.entities.workflow_node_execution import WorkflowNodeExecutionMetadataKey
 from core.workflow.nodes.enums import NodeType
 from extensions.ext_database import db
-from models import Account, App, EndUser, MessageFile, WorkflowNodeExecutionTriggeredFrom
+from models import EndUser, MessageFile, WorkflowNodeExecutionTriggeredFrom
 
 logger = logging.getLogger(__name__)
 
@@ -40,9 +40,14 @@ class WeaveDataTrace(BaseTraceInstance):
         self.weave_api_key = weave_config.api_key
         self.project_name = weave_config.project
         self.entity = weave_config.entity
+        self.host = weave_config.host
 
-        # Login with API key first
-        login_status = wandb.login(key=self.weave_api_key, verify=True, relogin=True)
+        # Login with API key first, including host if provided
+        if self.host:
+            login_status = wandb.login(key=self.weave_api_key, verify=True, relogin=True, host=self.host)
+        else:
+            login_status = wandb.login(key=self.weave_api_key, verify=True, relogin=True)
+
         if not login_status:
             logger.error("Failed to login to Weights & Biases with the provided API key")
             raise ValueError("Weave login failed")
@@ -61,11 +66,11 @@ class WeaveDataTrace(BaseTraceInstance):
             project_url = f"https://wandb.ai/{self.weave_client._project_id()}"
             return project_url
         except Exception as e:
-            logger.debug(f"Weave get run url failed: {str(e)}")
+            logger.debug("Weave get run url failed: %s", str(e))
             raise ValueError(f"Weave get run url failed: {str(e)}")
 
     def trace(self, trace_info: BaseTraceInfo):
-        logger.debug(f"Trace info: {trace_info}")
+        logger.debug("Trace info: %s", trace_info)
         if isinstance(trace_info, WorkflowTraceInfo):
             self.workflow_trace(trace_info)
         if isinstance(trace_info, MessageTraceInfo):
@@ -82,7 +87,7 @@ class WeaveDataTrace(BaseTraceInstance):
             self.generate_name_trace(trace_info)
 
     def workflow_trace(self, trace_info: WorkflowTraceInfo):
-        trace_id = trace_info.message_id or trace_info.workflow_run_id
+        trace_id = trace_info.trace_id or trace_info.message_id or trace_info.workflow_run_id
         if trace_info.start_time is None:
             trace_info.start_time = datetime.now()
 
@@ -133,27 +138,16 @@ class WeaveDataTrace(BaseTraceInstance):
         # through workflow_run_id get all_nodes_execution using repository
         session_factory = sessionmaker(bind=db.engine)
         # Find the app's creator account
-        with Session(db.engine, expire_on_commit=False) as session:
-            # Get the app to find its creator
-            app_id = trace_info.metadata.get("app_id")
-            if not app_id:
-                raise ValueError("No app_id found in trace_info metadata")
+        app_id = trace_info.metadata.get("app_id")
+        if not app_id:
+            raise ValueError("No app_id found in trace_info metadata")
 
-            app = session.query(App).filter(App.id == app_id).first()
-            if not app:
-                raise ValueError(f"App with id {app_id} not found")
+        service_account = self.get_service_account_with_tenant(app_id)
 
-            if not app.created_by:
-                raise ValueError(f"App with id {app_id} has no creator (created_by is None)")
-
-            service_account = session.query(Account).filter(Account.id == app.created_by).first()
-            if not service_account:
-                raise ValueError(f"Creator account with id {app.created_by} not found for app {app_id}")
-
-        workflow_node_execution_repository = SQLAlchemyWorkflowNodeExecutionRepository(
+        workflow_node_execution_repository = DifyCoreRepositoryFactory.create_workflow_node_execution_repository(
             session_factory=session_factory,
             user=service_account,
-            app_id=trace_info.metadata.get("app_id"),
+            app_id=app_id,
             triggered_from=WorkflowNodeExecutionTriggeredFrom.WORKFLOW_RUN,
         )
 
@@ -179,7 +173,7 @@ class WeaveDataTrace(BaseTraceInstance):
             finished_at = created_at + timedelta(seconds=elapsed_time)
 
             execution_metadata = node_execution.metadata if node_execution.metadata else {}
-            node_total_tokens = execution_metadata.get(NodeRunMetadataKey.TOTAL_TOKENS) or 0
+            node_total_tokens = execution_metadata.get(WorkflowNodeExecutionMetadataKey.TOTAL_TOKENS) or 0
             attributes = {str(k): v for k, v in execution_metadata.items()}
             attributes.update(
                 {
@@ -240,7 +234,7 @@ class WeaveDataTrace(BaseTraceInstance):
 
         if message_data.from_end_user_id:
             end_user_data: Optional[EndUser] = (
-                db.session.query(EndUser).filter(EndUser.id == message_data.from_end_user_id).first()
+                db.session.query(EndUser).where(EndUser.id == message_data.from_end_user_id).first()
             )
             if end_user_data is not None:
                 end_user_id = end_user_data.session_id
@@ -250,8 +244,12 @@ class WeaveDataTrace(BaseTraceInstance):
         attributes["start_time"] = trace_info.start_time
         attributes["end_time"] = trace_info.end_time
         attributes["tags"] = ["message", str(trace_info.conversation_mode)]
+
+        trace_id = trace_info.trace_id or message_id
+        attributes["trace_id"] = trace_id
+
         message_run = WeaveTraceModel(
-            id=message_id,
+            id=trace_id,
             op=str(TraceTaskName.MESSAGE_TRACE.value),
             input_tokens=trace_info.message_tokens,
             output_tokens=trace_info.answer_tokens,
@@ -279,7 +277,7 @@ class WeaveDataTrace(BaseTraceInstance):
         )
         self.start_call(
             llm_run,
-            parent_run_id=message_id,
+            parent_run_id=trace_id,
         )
         self.finish_call(llm_run)
         self.finish_call(message_run)
@@ -293,6 +291,9 @@ class WeaveDataTrace(BaseTraceInstance):
         attributes["message_id"] = trace_info.message_id
         attributes["start_time"] = trace_info.start_time or trace_info.message_data.created_at
         attributes["end_time"] = trace_info.end_time or trace_info.message_data.updated_at
+
+        trace_id = trace_info.trace_id or trace_info.message_id
+        attributes["trace_id"] = trace_id
 
         moderation_run = WeaveTraceModel(
             id=str(uuid.uuid4()),
@@ -308,7 +309,7 @@ class WeaveDataTrace(BaseTraceInstance):
             exception=getattr(trace_info, "error", None),
             file_list=[],
         )
-        self.start_call(moderation_run, parent_run_id=trace_info.message_id)
+        self.start_call(moderation_run, parent_run_id=trace_id)
         self.finish_call(moderation_run)
 
     def suggested_question_trace(self, trace_info: SuggestedQuestionTraceInfo):
@@ -321,6 +322,9 @@ class WeaveDataTrace(BaseTraceInstance):
         attributes["start_time"] = (trace_info.start_time or message_data.created_at,)
         attributes["end_time"] = (trace_info.end_time or message_data.updated_at,)
 
+        trace_id = trace_info.trace_id or trace_info.message_id
+        attributes["trace_id"] = trace_id
+
         suggested_question_run = WeaveTraceModel(
             id=str(uuid.uuid4()),
             op=str(TraceTaskName.SUGGESTED_QUESTION_TRACE.value),
@@ -331,7 +335,7 @@ class WeaveDataTrace(BaseTraceInstance):
             file_list=[],
         )
 
-        self.start_call(suggested_question_run, parent_run_id=trace_info.message_id)
+        self.start_call(suggested_question_run, parent_run_id=trace_id)
         self.finish_call(suggested_question_run)
 
     def dataset_retrieval_trace(self, trace_info: DatasetRetrievalTraceInfo):
@@ -343,6 +347,9 @@ class WeaveDataTrace(BaseTraceInstance):
         attributes["start_time"] = (trace_info.start_time or trace_info.message_data.created_at,)
         attributes["end_time"] = (trace_info.end_time or trace_info.message_data.updated_at,)
 
+        trace_id = trace_info.trace_id or trace_info.message_id
+        attributes["trace_id"] = trace_id
+
         dataset_retrieval_run = WeaveTraceModel(
             id=str(uuid.uuid4()),
             op=str(TraceTaskName.DATASET_RETRIEVAL_TRACE.value),
@@ -353,7 +360,7 @@ class WeaveDataTrace(BaseTraceInstance):
             file_list=[],
         )
 
-        self.start_call(dataset_retrieval_run, parent_run_id=trace_info.message_id)
+        self.start_call(dataset_retrieval_run, parent_run_id=trace_id)
         self.finish_call(dataset_retrieval_run)
 
     def tool_trace(self, trace_info: ToolTraceInfo):
@@ -361,6 +368,11 @@ class WeaveDataTrace(BaseTraceInstance):
         attributes["tags"] = ["tool", trace_info.tool_name]
         attributes["start_time"] = trace_info.start_time
         attributes["end_time"] = trace_info.end_time
+
+        message_id = trace_info.message_id or getattr(trace_info, "conversation_id", None)
+        message_id = message_id or None
+        trace_id = trace_info.trace_id or message_id
+        attributes["trace_id"] = trace_id
 
         tool_run = WeaveTraceModel(
             id=str(uuid.uuid4()),
@@ -371,9 +383,7 @@ class WeaveDataTrace(BaseTraceInstance):
             attributes=attributes,
             exception=trace_info.error,
         )
-        message_id = trace_info.message_id or getattr(trace_info, "conversation_id", None)
-        message_id = message_id or None
-        self.start_call(tool_run, parent_run_id=message_id)
+        self.start_call(tool_run, parent_run_id=trace_id)
         self.finish_call(tool_run)
 
     def generate_name_trace(self, trace_info: GenerateNameTraceInfo):
@@ -397,14 +407,18 @@ class WeaveDataTrace(BaseTraceInstance):
 
     def api_check(self):
         try:
-            login_status = wandb.login(key=self.weave_api_key, verify=True, relogin=True)
+            if self.host:
+                login_status = wandb.login(key=self.weave_api_key, verify=True, relogin=True, host=self.host)
+            else:
+                login_status = wandb.login(key=self.weave_api_key, verify=True, relogin=True)
+
             if not login_status:
                 raise ValueError("Weave login failed")
             else:
                 print("Weave login successful")
                 return True
         except Exception as e:
-            logger.debug(f"Weave API check failed: {str(e)}")
+            logger.debug("Weave API check failed: %s", str(e))
             raise ValueError(f"Weave API check failed: {str(e)}")
 
     def start_call(self, run_data: WeaveTraceModel, parent_run_id: Optional[str] = None):
