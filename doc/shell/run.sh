@@ -110,7 +110,6 @@ updateLib(){
   # 进入 API 目录
   cd api
   export UV_HTTP_TIMEOUT=240
-  uv add --default-index https://pypi.tuna.tsinghua.edu.cn/simple requests
   uv sync
 
 # cd api && poetry env use 3.12 && poetry install
