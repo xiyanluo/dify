@@ -110,6 +110,8 @@ updateLib(){
   # 进入 API 目录
   cd api
   export UV_HTTP_TIMEOUT=240
+  # 新增下面这一行来设置镜像源
+  export UV_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
   uv sync
 
 # cd api && poetry env use 3.12 && poetry install
